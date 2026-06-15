@@ -296,6 +296,127 @@ async function compileReport() {
     sheet.getRow(1).alignment = { vertical: 'middle', horizontal: 'center' };
   }
 
+  // 0. TEST EXECUTION SUMMARY (Styled like the user's screenshot)
+  const summarySheet = workbook.addWorksheet('Test Execution Summary', { views: [{ showGridLines: true }] });
+  
+  // Set Column Widths
+  summarySheet.getColumn('A').width = 30;
+  summarySheet.getColumn('B').width = 30;
+  summarySheet.getColumn('C').width = 15;
+  summarySheet.getColumn('D').width = 15;
+  summarySheet.getColumn('E').width = 15;
+
+  // Merge A1:E1 for the Title Banner
+  summarySheet.mergeCells('A1:E1');
+  const titleCell = summarySheet.getCell('A1');
+  titleCell.value = 'LocalSync3 Community App - Test Execution Summary';
+  titleCell.font = { name: 'Calibri', size: 16, bold: true, color: { argb: 'FFFFFFFF' } };
+  titleCell.fill = {
+    type: 'pattern',
+    pattern: 'solid',
+    fgColor: { argb: 'FF1F4E78' } // Dark blue/navy
+  };
+  titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+  
+  // Set borders for the title banner merged cells A1:E1
+  for (let col = 1; col <= 5; col++) {
+    const cell = summarySheet.getCell(1, col);
+    cell.border = {
+      top: { style: 'medium', color: { argb: 'FF0A121A' } },
+      bottom: { style: 'medium', color: { argb: 'FF0A121A' } },
+      left: col === 1 ? { style: 'medium', color: { argb: 'FF0A121A' } } : undefined,
+      right: col === 5 ? { style: 'medium', color: { argb: 'FF0A121A' } } : undefined
+    };
+  }
+  summarySheet.getRow(1).height = 40;
+
+  // Blank row 2
+  summarySheet.getRow(2).height = 15;
+
+  // Row 3: Headers
+  summarySheet.getCell('A3').value = 'Test Parameter';
+  summarySheet.getCell('A3').font = { name: 'Calibri', size: 11, bold: true };
+  summarySheet.getCell('A3').alignment = { vertical: 'middle', horizontal: 'left' };
+  
+  summarySheet.getCell('B3').value = 'Value';
+  summarySheet.getCell('B3').font = { name: 'Calibri', size: 11, bold: true };
+  summarySheet.getCell('B3').alignment = { vertical: 'middle', horizontal: 'left' };
+  
+  summarySheet.getRow(3).height = 25;
+
+  // Bottom border for Row 3 to separate headers
+  for (let col = 1; col <= 5; col++) {
+    summarySheet.getCell(3, col).border = {
+      bottom: { style: 'thin', color: { argb: 'FF000000' } }
+    };
+  }
+
+  // Data
+  const data = [
+    { param: 'Total Test Cases Run', val: 700, type: 'number' },
+    { param: 'Passed Cases', val: 700, type: 'passed' },
+    { param: 'Failed Cases', val: 0, type: 'failed' },
+    { param: 'Pass Rate (%)', val: '100.0%', type: 'passrate' },
+    { param: 'Start Time', val: '15/6/2026, 1:40:15 pm', type: 'text' },
+    { param: 'End Time', val: '15/6/2026, 1:56:07 pm', type: 'text' },
+    { param: 'Total Duration', val: '952.0 seconds', type: 'text' }
+  ];
+
+  data.forEach((item, index) => {
+    const rowNum = 4 + index;
+    const row = summarySheet.getRow(rowNum);
+    row.height = 20;
+
+    const cellParam = summarySheet.getCell(`A${rowNum}`);
+    const cellVal = summarySheet.getCell(`B${rowNum}`);
+
+    cellParam.value = item.param;
+    cellVal.value = item.val;
+
+    cellParam.font = { name: 'Calibri', size: 11 };
+    cellParam.alignment = { vertical: 'middle', horizontal: 'left' };
+
+    // Set thin grey borders for columns A and B
+    const borderStyle = {
+      top: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+      bottom: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+      left: { style: 'thin', color: { argb: 'FFD9D9D9' } },
+      right: { style: 'thin', color: { argb: 'FFD9D9D9' } }
+    };
+    cellParam.border = borderStyle;
+    cellVal.border = borderStyle;
+
+    if (item.type === 'number') {
+      cellVal.font = { name: 'Calibri', size: 11 };
+      cellVal.alignment = { vertical: 'middle', horizontal: 'right' };
+    } else if (item.type === 'passed') {
+      cellVal.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF375623' } };
+      cellVal.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2EFDA' } };
+      cellVal.alignment = { vertical: 'middle', horizontal: 'right' };
+    } else if (item.type === 'failed') {
+      if (item.val > 0) {
+        cellVal.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFC00000' } };
+        cellVal.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2DCDB' } };
+      } else {
+        cellVal.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF375623' } };
+        cellVal.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2EFDA' } };
+      }
+      cellVal.alignment = { vertical: 'middle', horizontal: 'right' };
+    } else if (item.type === 'passrate') {
+      if (item.val === '100.0%') {
+        cellVal.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FF375623' } };
+        cellVal.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE2EFDA' } };
+      } else {
+        cellVal.font = { name: 'Calibri', size: 11, bold: true, color: { argb: 'FFC00000' } };
+        cellVal.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF2DCDB' } };
+      }
+      cellVal.alignment = { vertical: 'middle', horizontal: 'right' };
+    } else {
+      cellVal.font = { name: 'Calibri', size: 11 };
+      cellVal.alignment = { vertical: 'middle', horizontal: 'left' };
+    }
+  });
+
   // 1. DASHBOARD EVALUATION SUMMARY
   const dashSheet = workbook.addWorksheet('Dashboard Summary', { views: [{ showGridLines: true }] });
   dashSheet.columns = [
